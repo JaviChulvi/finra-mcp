@@ -29,6 +29,19 @@ Full dataset inventory and metadata field lists are maintained in
 fetch the latest field definitions from FINRA with
 `/metadata/group/{group}/name/{dataset}`.
 
+## Public And Authenticated Access
+
+FINRA Query API access depends on the dataset and operation. Some catalog,
+metadata, and public data endpoints can be checked without credentials. Other
+endpoints require `FINRA_API_TOKEN`, and some authenticated calls also require
+FINRA account entitlements for the requested dataset.
+
+If `FINRA_API_TOKEN` is not configured, token-gated tools return
+`MissingCredentialsError` before sending the FINRA request. If a token is
+configured but FINRA rejects the request or the account lacks entitlement, the
+tool returns `FinraAuthenticationError` with FINRA's `401` response details.
+Treat those responses as access failures, not proof that the MCP tool is broken.
+
 ## Filter Payload
 
 The generic POST tools accept only these read-only FINRA Query API keys:

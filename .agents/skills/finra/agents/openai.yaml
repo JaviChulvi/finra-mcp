@@ -1,0 +1,9 @@
+interface:
+  display_name: "FINRA"
+  short_description: "Use the FINRA Query API MCP safely"
+  default_prompt: "Use $finra to discover FINRA Query API datasets, inspect metadata, and run safe read-only MCP queries."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "finra"
+      description: "FINRA Query API MCP server"

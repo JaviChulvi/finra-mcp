@@ -91,6 +91,10 @@ Metadata endpoints may be publicly accessible for some datasets, but data,
 `/datasets`, and most firm/registration datasets require valid FINRA
 credentials and entitlements.
 
+For more detail on how to interpret `MissingCredentialsError` versus FINRA
+`401` responses, see
+[docs/tool_reference.md](docs/tool_reference.md#public-and-authenticated-access).
+
 ## Run The MCP Server
 
 ```bash
