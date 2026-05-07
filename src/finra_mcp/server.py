@@ -35,7 +35,6 @@ from finra_mcp.tools.registration import (
     query_registration_dataset,
 )
 
-
 GENERIC_TOOLS = [
     list_query_api_groups,
     list_query_api_datasets,

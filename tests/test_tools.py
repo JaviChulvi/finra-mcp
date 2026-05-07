@@ -18,7 +18,7 @@ class StubClient:
         self.results = results or []
         self.calls: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
 
-    async def __aenter__(self) -> "StubClient":
+    async def __aenter__(self) -> StubClient:
         return self
 
     async def __aexit__(self, *exc_info: object) -> None:
@@ -192,4 +192,3 @@ def test_async_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     assert status["async_status"] == "complete"
     assert status["result_link"] == "https://example.test/result.csv"
     assert downloaded["data"] == "a,b\n1,2\n"
-

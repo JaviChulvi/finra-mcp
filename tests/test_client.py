@@ -33,15 +33,17 @@ def make_client(handler: httpx.MockTransport) -> FinraQueryClient:
         base_url="https://api.finra.test",
         transport=handler,
     )
-    return FinraQueryClient(FinraConfig(api_token="secret", base_url="https://api.finra.test"), http_client=http_client)
+    return FinraQueryClient(
+        FinraConfig(api_token="secret", base_url="https://api.finra.test"), http_client=http_client
+    )
 
 
 def test_path_builders_quote_components() -> None:
-    assert data_path("fixed Income", "name/with/slash") == "/data/group/fixed%20Income/name/name%2Fwith%2Fslash"
     assert (
-        record_path("g", "n", "id/1")
-        == "/data/group/g/name/n/id/id%2F1"
+        data_path("fixed Income", "name/with/slash")
+        == "/data/group/fixed%20Income/name/name%2Fwith%2Fslash"
     )
+    assert record_path("g", "n", "id/1") == "/data/group/g/name/n/id/id%2F1"
     assert metadata_path("g", "n") == "/metadata/group/g/name/n"
     assert async_status_path("g", "n", "r/1") == "/async-requests/group/g/name/n/r%2F1"
 
@@ -131,14 +133,18 @@ def test_post_readonly_payload_validation_and_serialization() -> None:
         def handler(request: httpx.Request) -> httpx.Response:
             payload = json.loads(request.content.decode())
             assert payload == {
-                "compareFilters": [{"fieldName": "marketCode", "compareType": "EQUAL", "fieldValue": "OTC"}],
+                "compareFilters": [
+                    {"fieldName": "marketCode", "compareType": "EQUAL", "fieldValue": "OTC"}
+                ],
                 "limit": 1,
             }
             return httpx.Response(200, json=[{"ok": True}])
 
         client = make_client(httpx.MockTransport(handler))
         payload = QueryPayload(
-            compareFilters=[{"fieldName": "marketCode", "compareType": "EQUAL", "fieldValue": "OTC"}],
+            compareFilters=[
+                {"fieldName": "marketCode", "compareType": "EQUAL", "fieldValue": "OTC"}
+            ],
             limit=1,
         )
         result = await client.query_dataset_post_readonly("otcMarket", "regShoDaily", payload)
@@ -173,7 +179,9 @@ def test_start_async_query_sets_async_flag() -> None:
 def test_error_mapping() -> None:
     async def main() -> None:
         def auth_handler(_: httpx.Request) -> httpx.Response:
-            return httpx.Response(401, json={"message": "Unauthorized"}, headers={"finra-api-request-id": "r1"})
+            return httpx.Response(
+                401, json={"message": "Unauthorized"}, headers={"finra-api-request-id": "r1"}
+            )
 
         client = make_client(httpx.MockTransport(auth_handler))
         with pytest.raises(FinraAuthenticationError) as exc_info:

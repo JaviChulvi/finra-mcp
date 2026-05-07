@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from finra_mcp.discovery.catalog import fields_from_catalog, find_dataset, list_datasets, list_groups
+from finra_mcp.discovery.catalog import (
+    fields_from_catalog,
+    find_dataset,
+    list_datasets,
+    list_groups,
+)
 
 
 def test_catalog_lists_required_groups() -> None:

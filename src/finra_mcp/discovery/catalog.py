@@ -24,7 +24,9 @@ def list_groups() -> list[dict[str, Any]]:
                 "group": group["group"],
                 "label": group.get("label", group["group"]),
                 "dataset_count": len(group.get("datasets", [])),
-                "dataset_name_count": sum(len(dataset.get("variants", [])) for dataset in group["datasets"]),
+                "dataset_name_count": sum(
+                    len(dataset.get("variants", [])) for dataset in group["datasets"]
+                ),
                 "documentation_categories": group.get("documentation_categories", []),
             }
         )
@@ -44,7 +46,9 @@ def iter_dataset_names(group: str | None = None):
             yield dataset, variant
 
 
-def list_datasets(group: str | None = None, *, include_variants: bool = True) -> list[dict[str, Any]]:
+def list_datasets(
+    group: str | None = None, *, include_variants: bool = True
+) -> list[dict[str, Any]]:
     datasets = []
     for dataset in iter_logical_datasets(group):
         item = {

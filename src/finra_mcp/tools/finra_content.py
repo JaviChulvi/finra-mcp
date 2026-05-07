@@ -11,7 +11,9 @@ FINRA_CONTENT_GROUP = "finra"
 
 async def list_finra_content_datasets(include_variants: bool = True) -> dict[str, Any]:
     """List FINRA Content Query API datasets in the `finra` group."""
-    return await list_query_api_datasets(group=FINRA_CONTENT_GROUP, include_variants=include_variants)
+    return await list_query_api_datasets(
+        group=FINRA_CONTENT_GROUP, include_variants=include_variants
+    )
 
 
 async def query_finra_content_dataset(

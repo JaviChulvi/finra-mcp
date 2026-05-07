@@ -11,7 +11,9 @@ REGISTRATION_GROUP = "registration"
 
 async def list_registration_datasets(include_variants: bool = True) -> dict[str, Any]:
     """List Registration Query API datasets in the `registration` group."""
-    return await list_query_api_datasets(group=REGISTRATION_GROUP, include_variants=include_variants)
+    return await list_query_api_datasets(
+        group=REGISTRATION_GROUP, include_variants=include_variants
+    )
 
 
 async def query_registration_dataset(

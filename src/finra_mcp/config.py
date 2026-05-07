@@ -23,7 +23,7 @@ class FinraConfig(BaseModel):
         return value
 
     @classmethod
-    def from_env(cls) -> "FinraConfig":
+    def from_env(cls) -> FinraConfig:
         """Load configuration from environment variables."""
         timeout = os.getenv("FINRA_TIMEOUT")
         return cls(

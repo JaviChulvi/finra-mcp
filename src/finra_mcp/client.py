@@ -12,7 +12,12 @@ import httpx
 from finra_mcp.auth import bearer_auth_headers, require_bearer_token
 from finra_mcp.config import FinraConfig
 from finra_mcp.errors import finra_error_from_response
-from finra_mcp.models import PaginationHeaders, QueryPayload, QueryResult, validate_read_only_payload
+from finra_mcp.models import (
+    PaginationHeaders,
+    QueryPayload,
+    QueryResult,
+    validate_read_only_payload,
+)
 
 
 def _quote_path(value: str) -> str:
@@ -112,7 +117,7 @@ class FinraQueryClient:
         if self._owned_client:
             await self._client.aclose()
 
-    async def __aenter__(self) -> "FinraQueryClient":
+    async def __aenter__(self) -> FinraQueryClient:
         return self
 
     async def __aexit__(self, *exc_info: object) -> None:
@@ -209,7 +214,9 @@ class FinraQueryClient:
                 "sortFields": ",".join(sort_fields) if sort_fields else None,
             }
         )
-        return await self._request("GET", data_path(group, dataset), params=params, require_token=True)
+        return await self._request(
+            "GET", data_path(group, dataset), params=params, require_token=True
+        )
 
     async def query_dataset_post_readonly(
         self,
@@ -227,7 +234,9 @@ class FinraQueryClient:
         )
 
     async def get_record_by_id(self, group: str, dataset: str, record_id: str) -> QueryResult:
-        return await self._request("GET", record_path(group, dataset, record_id), require_token=True)
+        return await self._request(
+            "GET", record_path(group, dataset, record_id), require_token=True
+        )
 
     async def start_async_query(
         self,
@@ -247,7 +256,9 @@ class FinraQueryClient:
             )
         if method != "POST":
             raise ValueError("Async Query API requests must use GET or read-only POST")
-        body = payload.to_finra_payload() if isinstance(payload, QueryPayload) else dict(payload or {})
+        body = (
+            payload.to_finra_payload() if isinstance(payload, QueryPayload) else dict(payload or {})
+        )
         body["async"] = True
         validate_read_only_payload(body)
         return await self._request(

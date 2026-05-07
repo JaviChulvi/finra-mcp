@@ -106,7 +106,7 @@ async def list_query_api_datasets(
         async with FinraQueryClient() as client:
             result = await client.list_datasets(group=group)
         return _result_to_response(result, group=group)
-    except Exception as exc:  # noqa: BLE001 - MCP tools should return clear structured errors.
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -125,7 +125,9 @@ async def get_dataset_details(
             "documentation_url": None,
             "data_endpoint": f"/data/group/{group}/name/{dataset}",
             "metadata_endpoint": f"/metadata/group/{group}/name/{dataset}",
-            "notes": ["Dataset was not present in the bundled catalog; runtime metadata may still exist."],
+            "notes": [
+                "Dataset was not present in the bundled catalog; runtime metadata may still exist."
+            ],
         }
 
     response: dict[str, Any] = {
@@ -151,7 +153,7 @@ async def get_dataset_metadata(group: str, dataset: str) -> dict[str, Any]:
             "metadata": metadata,
             "pagination": result.pagination.model_dump(exclude_none=True),
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         fallback_fields = fields_from_catalog(group, dataset)
         if fallback_fields:
             return {
@@ -183,7 +185,9 @@ async def get_dataset_fields(group: str, dataset: str) -> dict[str, Any]:
         "fields": fields,
         "field_names": field_names(metadata),
         "field_count": len(fields),
-        "partition_fields": metadata.get("partition_fields") or metadata.get("partitionFields") or [],
+        "partition_fields": metadata.get("partition_fields")
+        or metadata.get("partitionFields")
+        or [],
         "primary_id_field": metadata.get("primary_id_field"),
     }
 
@@ -210,7 +214,7 @@ async def query_dataset_get(
                 extra_params=extra_params,
             )
         return _result_to_response(result, group=group, dataset=dataset)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -225,7 +229,7 @@ async def query_dataset_post_readonly(
         async with FinraQueryClient() as client:
             result = await client.query_dataset_post_readonly(group, dataset, body)
         return _result_to_response(result, group=group, dataset=dataset)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -235,7 +239,7 @@ async def get_dataset_record_by_id(group: str, dataset: str, record_id: str) -> 
         async with FinraQueryClient() as client:
             result = await client.get_record_by_id(group, dataset, record_id)
         return _result_to_response(result, group=group, dataset=dataset)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -266,7 +270,7 @@ async def query_dataset_with_filters(
         async with FinraQueryClient() as client:
             result = await client.query_dataset_post_readonly(group, dataset, payload)
         return _result_to_response(result, group=group, dataset=dataset)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -330,10 +334,16 @@ async def query_dataset_paginated(
                 pages.append(page_info)
                 records.extend(page_data)
 
-                returned = result.pagination.returned if result.pagination.returned is not None else len(page_data)
+                returned = (
+                    result.pagination.returned
+                    if result.pagination.returned is not None
+                    else len(page_data)
+                )
                 effective_limit = result.pagination.limit or page_size
                 total = result.pagination.total
-                next_offset = (result.pagination.offset if result.pagination.offset is not None else offset) + effective_limit
+                next_offset = (
+                    result.pagination.offset if result.pagination.offset is not None else offset
+                ) + effective_limit
 
                 if returned < effective_limit:
                     break
@@ -351,7 +361,7 @@ async def query_dataset_paginated(
             "record_count": len(records),
             "pages": pages,
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -369,7 +379,7 @@ async def start_async_query(
         response = _result_to_response(result, group=group, dataset=dataset)
         response["async_status_url"] = result.pagination.location
         return response
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -384,7 +394,7 @@ async def get_async_query_status(group: str, dataset: str, request_id: str) -> d
             response["expires"] = result.data.get("expires")
             response["async_status"] = result.data.get("status")
         return response
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)
 
 
@@ -398,5 +408,5 @@ async def download_async_query_result(result_link: str) -> dict[str, Any]:
         async with FinraQueryClient() as client:
             result = await client.download_async_query_result(result_link)
         return _result_to_response(result)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_to_response(exc)

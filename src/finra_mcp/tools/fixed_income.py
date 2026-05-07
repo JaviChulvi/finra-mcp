@@ -11,7 +11,9 @@ FIXED_INCOME_GROUP = "fixedIncomeMarket"
 
 async def list_fixed_income_datasets(include_variants: bool = True) -> dict[str, Any]:
     """List Fixed Income Query API datasets in the `fixedIncomeMarket` group."""
-    return await list_query_api_datasets(group=FIXED_INCOME_GROUP, include_variants=include_variants)
+    return await list_query_api_datasets(
+        group=FIXED_INCOME_GROUP, include_variants=include_variants
+    )
 
 
 async def query_fixed_income_dataset(
