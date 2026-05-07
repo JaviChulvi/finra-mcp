@@ -670,6 +670,21 @@ schemas.
 | `list_registration_datasets` | `registration` | List Registration datasets. |
 | `query_registration_dataset` | `registration` | Query a Registration dataset. |
 
+Support matrix:
+
+| Tool | Dataset group support | Filter support | Pagination support | Async support |
+| --- | --- | --- | --- | --- |
+| `list_equity_datasets` | `otcMarket` | No | No | No |
+| `query_equity_dataset` | `otcMarket` | Compare, date range, domain, fields, sort, limit, offset | Yes | Use generic async tools |
+| `list_fixed_income_datasets` | `fixedIncomeMarket` | No | No | No |
+| `query_fixed_income_dataset` | `fixedIncomeMarket` | Compare, date range, domain, fields, sort, limit, offset | Yes | Use generic async tools |
+| `list_finra_content_datasets` | `finra` | No | No | No |
+| `query_finra_content_dataset` | `finra` | Compare, date range, domain, fields, sort, limit, offset | Yes | Use generic async tools |
+| `list_firm_datasets` | `firm` | No | No | No |
+| `query_firm_dataset` | `firm` | Compare, date range, domain, fields, sort, limit, offset | Yes | Use generic async tools |
+| `list_registration_datasets` | `registration` | No | No | No |
+| `query_registration_dataset` | `registration` | Compare, date range, domain, fields, sort, limit, offset | Yes | Use generic async tools |
+
 List wrapper arguments:
 
 - `include_variants`: include production, mock, and historic names. Default `true`.
@@ -713,3 +728,70 @@ Filter support: same as `query_dataset_with_filters`.
 Pagination support: parses Query API pagination headers.
 
 Async support: use generic async tools.
+
+Common dataset examples:
+
+Equity:
+
+```json
+{
+  "tool": "query_equity_dataset",
+  "arguments": {
+    "dataset": "weeklySummary",
+    "fields": ["weekStartDate", "tierIdentifier", "totalWeeklyTradeCount"],
+    "limit": 100
+  }
+}
+```
+
+Fixed Income:
+
+```json
+{
+  "tool": "query_fixed_income_dataset",
+  "arguments": {
+    "dataset": "treasuryDailyAggregates",
+    "fields": ["reportingDate", "totalTradeCount"],
+    "limit": 100
+  }
+}
+```
+
+FINRA Content:
+
+```json
+{
+  "tool": "query_finra_content_dataset",
+  "arguments": {
+    "dataset": "finraRulebook",
+    "fields": ["ruleNumber", "ruleTitle"],
+    "limit": 25
+  }
+}
+```
+
+Firm:
+
+```json
+{
+  "tool": "query_firm_dataset",
+  "arguments": {
+    "dataset": "firmProfile",
+    "fields": ["firmCrdNumber", "firmName"],
+    "limit": 10
+  }
+}
+```
+
+Registration:
+
+```json
+{
+  "tool": "query_registration_dataset",
+  "arguments": {
+    "dataset": "branchList",
+    "fields": ["firmCrdNumber", "branchCrdNumber"],
+    "limit": 10
+  }
+}
+```
