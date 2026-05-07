@@ -5,6 +5,16 @@ from __future__ import annotations
 from fastmcp import FastMCP
 
 from finra_mcp import __version__
+from finra_mcp.tools.equity import list_equity_datasets, query_equity_dataset
+from finra_mcp.tools.finra_content import (
+    list_finra_content_datasets,
+    query_finra_content_dataset,
+)
+from finra_mcp.tools.firm import list_firm_datasets, query_firm_dataset
+from finra_mcp.tools.fixed_income import (
+    list_fixed_income_datasets,
+    query_fixed_income_dataset,
+)
 from finra_mcp.tools.query import (
     download_async_query_result,
     get_async_query_status,
@@ -19,6 +29,10 @@ from finra_mcp.tools.query import (
     query_dataset_post_readonly,
     query_dataset_with_filters,
     start_async_query,
+)
+from finra_mcp.tools.registration import (
+    list_registration_datasets,
+    query_registration_dataset,
 )
 
 
@@ -38,7 +52,18 @@ GENERIC_TOOLS = [
     download_async_query_result,
 ]
 
-CONVENIENCE_TOOLS = []
+CONVENIENCE_TOOLS = [
+    query_equity_dataset,
+    query_fixed_income_dataset,
+    query_finra_content_dataset,
+    query_firm_dataset,
+    query_registration_dataset,
+    list_equity_datasets,
+    list_fixed_income_datasets,
+    list_finra_content_datasets,
+    list_firm_datasets,
+    list_registration_datasets,
+]
 
 
 def create_server() -> FastMCP:
