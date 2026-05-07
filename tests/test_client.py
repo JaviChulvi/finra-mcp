@@ -19,7 +19,6 @@ from finra_mcp.config import FinraConfig
 from finra_mcp.errors import (
     FinraAuthenticationError,
     FinraRateLimitError,
-    MissingCredentialsError,
 )
 from finra_mcp.models import QueryPayload
 
@@ -118,11 +117,29 @@ def test_metadata_can_be_requested_without_token() -> None:
     run(main())
 
 
-def test_missing_token_is_clear_for_data_requests() -> None:
+def test_data_requests_can_run_without_token_for_public_datasets() -> None:
     async def main() -> None:
-        client = FinraQueryClient(FinraConfig(api_token=None, base_url="https://api.finra.test"))
-        with pytest.raises(MissingCredentialsError, match="FINRA_API_TOKEN"):
-            await client.query_dataset_get("otcMarket", "regShoDaily")
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.url.path == "/data/group/otcMarket/name/regShoDaily"
+            assert "authorization" not in request.headers
+            return httpx.Response(
+                200,
+                json=[{"marketCode": "B"}],
+                headers={"record-total": "1", "record-limit": "1"},
+            )
+
+        http_client = httpx.AsyncClient(
+            base_url="https://api.finra.test",
+            transport=httpx.MockTransport(handler),
+        )
+        client = FinraQueryClient(
+            FinraConfig(api_token=None, base_url="https://api.finra.test"),
+            http_client=http_client,
+        )
+
+        result = await client.query_dataset_get("otcMarket", "regShoDaily", limit=1)
+
+        assert result.data == [{"marketCode": "B"}]
         await client.close()
 
     run(main())

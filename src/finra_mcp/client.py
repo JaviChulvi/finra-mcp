@@ -215,7 +215,7 @@ class FinraQueryClient:
             }
         )
         return await self._request(
-            "GET", data_path(group, dataset), params=params, require_token=True
+            "GET", data_path(group, dataset), params=params, require_token=False
         )
 
     async def query_dataset_post_readonly(
@@ -230,12 +230,12 @@ class FinraQueryClient:
             "POST",
             data_path(group, dataset),
             json_payload=body,
-            require_token=True,
+            require_token=False,
         )
 
     async def get_record_by_id(self, group: str, dataset: str, record_id: str) -> QueryResult:
         return await self._request(
-            "GET", record_path(group, dataset, record_id), require_token=True
+            "GET", record_path(group, dataset, record_id), require_token=False
         )
 
     async def start_async_query(
@@ -252,7 +252,7 @@ class FinraQueryClient:
                 "GET",
                 data_path(group, dataset),
                 params={"async": "true"},
-                require_token=True,
+                require_token=False,
             )
         if method != "POST":
             raise ValueError("Async Query API requests must use GET or read-only POST")
@@ -265,7 +265,7 @@ class FinraQueryClient:
             "POST",
             data_path(group, dataset),
             json_payload=body,
-            require_token=True,
+            require_token=False,
         )
 
     async def get_async_query_status(
