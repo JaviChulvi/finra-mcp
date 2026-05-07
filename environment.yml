@@ -1,0 +1,13 @@
+name: finra-mcp
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pytest
+  - ruff
+  - pip:
+      - fastmcp>=2.0.0
+      - httpx>=0.27.0
+      - pydantic>=2.7.0
+      - -e .
