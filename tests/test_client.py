@@ -243,3 +243,130 @@ def test_async_get_accepts_empty_payload() -> None:
             assert result.status_code == 202
         await client.close()
     run(main())
+
+
+def test_result_download_is_isolated_and_rejects_unsafe_destinations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import socket
+
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda *args, **kwargs: [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+
+    async def main() -> None:
+        calls = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request)
+            assert request.url.host == "93.184.216.34"
+            assert request.headers["host"] == "results.example.test"
+            assert request.extensions["sni_hostname"] == "results.example.test"
+            assert "authorization" not in request.headers
+            assert "cookie" not in request.headers
+            assert request.url.query == b"signature=a%2Fb&expires=123&part=1&part=2"
+            return httpx.Response(200, text="ok")
+
+        real_client = httpx.AsyncClient
+        injected = real_client(
+            headers={"Authorization": "Bearer injected", "Cookie": "secret=x"},
+            transport=httpx.MockTransport(handler),
+        )
+
+        def download_client(**kwargs: Any) -> httpx.AsyncClient:
+            assert kwargs["follow_redirects"] is False
+            assert kwargs["trust_env"] is False
+            return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+        client = FinraQueryClient(
+            FinraConfig(api_token="secret", result_hosts=["results.example.test"]),
+            http_client=injected,
+        )
+        monkeypatch.setattr(httpx, "AsyncClient", download_client)
+        for url in (
+            "http://results.example.test/x",
+            "https://evil.test/x",
+            "https://127.0.0.1/x",
+            "https://results.example.test@evil.test/x",
+        ):
+            with pytest.raises(ValueError):
+                await client.download_async_query_result(url)
+        result = await client.download_async_query_result(
+            "https://results.example.test/x?signature=a%2Fb&expires=123&part=1&part=2"
+        )
+        assert result.data == "ok"
+        assert len(calls) == 1
+        await injected.aclose()
+
+    run(main())
+
+
+def test_result_download_does_not_follow_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
+    import socket
+
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda *args, **kwargs: [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+
+    async def main() -> None:
+        real_client = httpx.AsyncClient
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(302, headers={"location": "http://127.0.0.1/"})
+
+        def download_client(**kwargs: Any) -> httpx.AsyncClient:
+            return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+        injected = real_client(transport=httpx.MockTransport(handler))
+        client = FinraQueryClient(
+            FinraConfig(result_hosts=["results.example.test"]), http_client=injected
+        )
+        monkeypatch.setattr(httpx, "AsyncClient", download_client)
+        with pytest.raises(ValueError, match="redirect"):
+            await client.download_async_query_result("https://results.example.test/x")
+        await injected.aclose()
+
+    run(main())
+
+
+@pytest.mark.parametrize("address", ["127.0.0.1", "10.0.0.1", "169.254.169.254", "::1"])
+def test_result_download_rejects_private_dns(monkeypatch: pytest.MonkeyPatch, address: str) -> None:
+    import socket
+
+    async def main() -> None:
+        real_client = httpx.AsyncClient
+        calls = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request)
+            return httpx.Response(200, text="private response")
+
+        monkeypatch.setattr(
+            socket,
+            "getaddrinfo",
+            lambda *args, **kwargs: [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (address, 443))],
+        )
+        monkeypatch.setattr(
+            httpx,
+            "AsyncClient",
+            lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+        )
+        client = FinraQueryClient(
+            FinraConfig(result_hosts=["results.example.test"]), http_client=real_client()
+        )
+        try:
+            with pytest.raises(ValueError, match="public"):
+                await client.download_async_query_result("https://results.example.test/file")
+            assert not calls
+        finally:
+            await client.close()
+
+    run(main())

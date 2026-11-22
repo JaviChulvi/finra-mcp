@@ -13,6 +13,7 @@ class FinraConfig(BaseModel):
     api_token: str | None = Field(default=None)
     base_url: str = Field(default="https://api.finra.org")
     timeout: float = Field(default=30.0, gt=0)
+    result_hosts: list[str] = Field(default_factory=list)
 
     @field_validator("base_url")
     @classmethod
@@ -30,4 +31,9 @@ class FinraConfig(BaseModel):
             api_token=os.getenv("FINRA_API_TOKEN") or None,
             base_url=os.getenv("FINRA_BASE_URL") or "https://api.finra.org",
             timeout=float(timeout) if timeout else 30.0,
+            result_hosts=[
+                host.strip().lower()
+                for host in os.getenv("FINRA_RESULT_HOSTS", "").split(",")
+                if host.strip()
+            ],
         )

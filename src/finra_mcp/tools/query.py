@@ -297,6 +297,17 @@ async def query_dataset_paginated(
     if method not in {"GET", "POST"}:
         return _error_to_response(ValueError("method must be GET or POST"))
 
+    if method == "GET":
+        for name, value in (("compare_filters", compare_filters),
+                            ("date_range_filters", date_range_filters),
+                            ("domain_filters", domain_filters)):
+            if value:
+                return _error_to_response(ValueError(f"GET does not support {name}; use POST"))
+        if sort_fields and not all(isinstance(field, str) for field in sort_fields):
+            return _error_to_response(
+                ValueError("GET sort_fields must contain only strings; use POST")
+            )
+
     pages: list[dict[str, Any]] = []
     records: list[Any] = []
     offset = start_offset
@@ -310,6 +321,7 @@ async def query_dataset_paginated(
                         fields=fields,
                         limit=page_size,
                         offset=offset,
+                        sort_fields=sort_fields,  # type: ignore[arg-type]
                     )
                 else:
                     payload = _build_payload(
