@@ -192,3 +192,28 @@ def test_async_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     assert status["async_status"] == "complete"
     assert status["result_link"] == "https://example.test/result.csv"
     assert downloaded["data"] == "a,b\n1,2\n"
+
+
+@pytest.mark.parametrize("argument,value", [
+    ("compare_filters", [{"fieldName": "x"}]),
+    ("date_range_filters", [{"fieldName": "x"}]),
+    ("domain_filters", [{"fieldName": "x"}]),
+    ("sort_fields", [{"fieldName": "x", "sortType": "ASC"}]),
+])
+def test_paginated_get_rejects_unsupported_arguments(
+    monkeypatch: pytest.MonkeyPatch, argument: str, value: list[Any]
+) -> None:
+    stub = StubClient([result([])])
+    monkeypatch.setattr(query, "FinraQueryClient", lambda: stub)
+    response = run(query.query_dataset_paginated("g", "n", method="GET", **{argument: value}))
+    assert response["status"] == "error"
+    assert argument in response["message"]
+    assert not stub.calls
+
+
+def test_paginated_get_transmits_string_sort_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    stub = StubClient([result([])])
+    monkeypatch.setattr(query, "FinraQueryClient", lambda: stub)
+    response = run(query.query_dataset_paginated("g", "n", method="GET", sort_fields=["x"]))
+    assert response["status"] == "ok"
+    assert stub.calls[0][2]["sort_fields"] == ["x"]
