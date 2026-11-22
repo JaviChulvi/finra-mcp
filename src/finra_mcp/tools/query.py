@@ -304,7 +304,9 @@ async def query_dataset_paginated(
             if value:
                 return _error_to_response(ValueError(f"GET does not support {name}; use POST"))
         if sort_fields and not all(isinstance(field, str) for field in sort_fields):
-            return _error_to_response(ValueError("GET sort_fields must contain only strings; use POST"))
+            return _error_to_response(
+                ValueError("GET sort_fields must contain only strings; use POST")
+            )
 
     pages: list[dict[str, Any]] = []
     records: list[Any] = []
