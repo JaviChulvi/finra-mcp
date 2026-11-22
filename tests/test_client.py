@@ -217,6 +217,34 @@ def test_error_mapping() -> None:
     run(main())
 
 
+@pytest.mark.parametrize("payload", [{"fields": ["symbol"], "limit": 1}, QueryPayload(limit=1)])
+def test_async_get_rejects_nonempty_payload_before_request(payload: Any) -> None:
+    async def main() -> None:
+        requests = []
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            return httpx.Response(202, json={})
+        client = make_client(httpx.MockTransport(handler))
+        with pytest.raises(ValueError, match=r"GET.*payload"):
+            await client.start_async_query("g", "n", payload, method="GET")
+        assert not requests
+        await client.close()
+    run(main())
+
+
+def test_async_get_accepts_empty_payload() -> None:
+    async def main() -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.url.params["async"] == "true"
+            return httpx.Response(202, json={})
+        client = make_client(httpx.MockTransport(handler))
+        for payload in (None, {}, QueryPayload()):
+            result = await client.start_async_query("g", "n", payload, method="GET")
+            assert result.status_code == 202
+        await client.close()
+    run(main())
+
+
 def test_result_download_is_isolated_and_rejects_unsafe_destinations(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

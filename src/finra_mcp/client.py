@@ -258,6 +258,9 @@ class FinraQueryClient:
     ) -> QueryResult:
         method = method.upper()
         if method == "GET":
+            body = payload.to_finra_payload() if isinstance(payload, QueryPayload) else payload
+            if body:
+                raise ValueError("Async GET does not support a payload; use POST")
             return await self._request(
                 "GET",
                 data_path(group, dataset),
