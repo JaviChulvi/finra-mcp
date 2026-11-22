@@ -240,7 +240,7 @@ def test_result_download_is_isolated_and_rejects_unsafe_destinations(
             assert request.extensions["sni_hostname"] == "results.example.test"
             assert "authorization" not in request.headers
             assert "cookie" not in request.headers
-            assert request.url.query == b"signature=a%2Fb&expires=123"
+            assert request.url.query == b"signature=a%2Fb&expires=123&part=1&part=2"
             return httpx.Response(200, text="ok")
 
         real_client = httpx.AsyncClient
@@ -268,7 +268,7 @@ def test_result_download_is_isolated_and_rejects_unsafe_destinations(
             with pytest.raises(ValueError):
                 await client.download_async_query_result(url)
         result = await client.download_async_query_result(
-            "https://results.example.test/x?signature=a%2Fb&expires=123"
+            "https://results.example.test/x?signature=a%2Fb&expires=123&part=1&part=2"
         )
         assert result.data == "ok"
         assert len(calls) == 1
