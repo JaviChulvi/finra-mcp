@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import ipaddress
+import socket
 from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import httpx
 
@@ -151,11 +154,18 @@ class FinraQueryClient:
         response = await self._client.request(
             method,
             path_or_url,
-            params={key: value for key, value in (params or {}).items() if value is not None},
+            params=(
+                {key: value for key, value in params.items() if value is not None}
+                if params else None
+            ),
             json=json_payload,
             headers=request_headers,
         )
 
+        return self._parse_response(response)
+
+    @staticmethod
+    def _parse_response(response: httpx.Response) -> QueryResult:
         body: Any
         content_type = response.headers.get("content-type", "")
         if response.content and "application/json" in content_type:
@@ -281,4 +291,42 @@ class FinraQueryClient:
         )
 
     async def download_async_query_result(self, result_url: str) -> QueryResult:
-        return await self._request("GET", result_url, require_token=False)
+        url = urlsplit(result_url)
+        host = url.hostname or ""
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            pass
+        else:
+            raise ValueError("Result URL must use a trusted hostname, not an IP address")
+        if (
+            url.scheme != "https"
+            or not host
+            or host.lower() not in self.config.result_hosts
+            or host == "localhost"
+            or host.endswith(".localhost")
+            or url.username is not None
+            or url.password is not None
+            or url.port not in (None, 443)
+            or url.fragment
+        ):
+            raise ValueError("Result URL must use an explicitly trusted HTTPS host")
+        addresses = await asyncio.wait_for(
+            asyncio.to_thread(socket.getaddrinfo, host, 443, type=socket.SOCK_STREAM),
+            timeout=self.config.timeout,
+        )
+        if not addresses or any(
+            not ipaddress.ip_address(address[4][0]).is_global for address in addresses
+        ):
+            raise ValueError("Result hostname must resolve only to public IP addresses")
+        # Pin the validated address; preserve the signed Host and TLS identity.
+        pinned_url = httpx.URL(result_url).copy_with(host=addresses[0][4][0])
+        async with httpx.AsyncClient(
+            timeout=self.config.timeout, follow_redirects=False, trust_env=False
+        ) as client:
+            response = await client.request(
+                "GET", pinned_url, headers={"Host": host}, extensions={"sni_hostname": host}
+            )
+        if response.is_redirect:
+            raise ValueError("Result URL redirects are not allowed")
+        return self._parse_response(response)
