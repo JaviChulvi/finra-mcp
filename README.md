@@ -86,6 +86,11 @@ Variables:
 - `FINRA_API_TOKEN`: Bearer token for authenticated FINRA Query API calls.
 - `FINRA_BASE_URL`: optional, defaults to `https://api.finra.org`.
 - `FINRA_TIMEOUT`: optional HTTP timeout in seconds, defaults to `30`.
+- `FINRA_RESULT_HOSTS`: comma-separated exact, trusted result hostnames. Configure the
+  hostname supplied by FINRA for your signed results before downloading; no hosts are
+  trusted by default. Only HTTPS on port 443 is allowed, and redirects are rejected.
+  DNS must resolve exclusively to public addresses; the connection is pinned to a
+  validated address while preserving the original Host header and TLS identity.
 
 Metadata endpoints may be publicly accessible for some datasets, but data,
 `/datasets`, and most firm/registration datasets require valid FINRA
