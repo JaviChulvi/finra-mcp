@@ -225,7 +225,7 @@ def test_async_get_rejects_nonempty_payload_before_request(payload: Any) -> None
             requests.append(request)
             return httpx.Response(202, json={})
         client = make_client(httpx.MockTransport(handler))
-        with pytest.raises(ValueError, match="GET.*payload"):
+        with pytest.raises(ValueError, match=r"GET.*payload"):
             await client.start_async_query("g", "n", payload, method="GET")
         assert not requests
         await client.close()
@@ -239,6 +239,7 @@ def test_async_get_accepts_empty_payload() -> None:
             return httpx.Response(202, json={})
         client = make_client(httpx.MockTransport(handler))
         for payload in (None, {}, QueryPayload()):
-            assert (await client.start_async_query("g", "n", payload, method="GET")).status_code == 202
+            result = await client.start_async_query("g", "n", payload, method="GET")
+            assert result.status_code == 202
         await client.close()
     run(main())
