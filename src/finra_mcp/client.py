@@ -151,7 +151,10 @@ class FinraQueryClient:
         response = await self._client.request(
             method,
             path_or_url,
-            params={key: value for key, value in (params or {}).items() if value is not None},
+            params=(
+                {key: value for key, value in params.items() if value is not None}
+                if params else None
+            ),
             json=json_payload,
             headers=request_headers,
         )

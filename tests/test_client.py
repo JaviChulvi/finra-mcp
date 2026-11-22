@@ -215,3 +215,17 @@ def test_error_mapping() -> None:
         await client.close()
 
     run(main())
+
+
+def test_result_download_preserves_signed_query() -> None:
+    async def main() -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.url.query == b"signature=a%2Fb&expires=123&part=1&part=2"
+            return httpx.Response(200, text="downloaded")
+        client = make_client(httpx.MockTransport(handler))
+        result = await client.download_async_query_result(
+            "https://results.example.test/file?signature=a%2Fb&expires=123&part=1&part=2"
+        )
+        assert result.data == "downloaded"
+        await client.close()
+    run(main())
